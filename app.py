@@ -61,6 +61,18 @@ def crea_admin():
         db.session.commit()
         print("✅ Dati di esempio creati!")
 
+    # Utente magazziniere di esempio
+    if not User.query.filter_by(username='mario').first():
+        mario = User(
+            username='mario',
+            email='mario@scuola.it',
+            role='magazziniere'
+        )
+        mario.set_password('mario123')
+        db.session.add(mario)
+        db.session.commit()
+        print("✅ Utente mario creato!")
+
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=True)

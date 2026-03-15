@@ -47,7 +47,7 @@ export default function Dashboard() {
             { key: 'dashboard', icon: '📊', label: 'Dashboard' },
             { key: 'items', icon: '📦', label: 'Scorte' },
             { key: 'categories', icon: '🏷️', label: 'Categorie' },
-            { key: 'users', icon: '👥', label: 'Utenti' },
+            ...(user?.role === 'admin' ? [{ key: 'users', icon: '👥', label: 'Utenti' }] : []),
           ].map(item => (
             <div key={item.key} onClick={() => setPage(item.key)} style={{
               display: 'flex', alignItems: 'center', gap: 10,
