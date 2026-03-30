@@ -20,6 +20,16 @@ export default function Dashboard() {
   const [editingItem, setEditingItem] = useState(null)
   const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', quantity: 0, min_threshold: 5, unit: 'pezzi' })
 
+  // Stati per il modal categorie
+  const [showCatModal, setShowCatModal] = useState(false)
+  const [editingCat, setEditingCat] = useState(null)
+  const [catForm, setCatForm] = useState({ name: '', description: '' })
+
+  // Stati per il modal utenti
+  const [showUserModal, setShowUserModal] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [userForm, setUserForm] = useState({ username: '', email: '', password: '', role: 'viewer' })
+
   const fetchAll = () => {
     api.get('/api/items').then(r => setItems(r.data))
     api.get('/api/categories').then(r => setCategories(r.data))
@@ -64,6 +74,68 @@ export default function Dashboard() {
     await api.delete(`/api/items/${id}`)
     fetchAll()
   }
+
+
+  // ── CATEGORIE ──
+  const openNewCat = () => {
+    setEditingCat(null)
+    setCatForm({ name: '', description: '' })
+    setShowCatModal(true)
+  }
+
+  const openEditCat = (cat) => {
+    setEditingCat(cat)
+    setCatForm({ name: cat.name, description: cat.description || '' })
+    setShowCatModal(true)
+  }
+
+  const saveCat = async () => {
+    if (editingCat) {
+      await api.put(`/api/categories/${editingCat.id}`, catForm)
+    } else {
+      await api.post('/api/categories', catForm)
+    }
+    setShowCatModal(false)
+    fetchAll()
+  }
+
+  const deleteCat = async (id) => {
+    if (!window.confirm('Eliminare questa categoria?')) return
+    await api.delete(`/api/categories/${id}`)
+    fetchAll()
+  }
+
+
+  // ── UTENTI ──
+  const openNewUser = () => {
+    setEditingUser(null)
+    setUserForm({ username: '', email: '', password: '', role: 'viewer' })
+    setShowUserModal(true)
+  }
+
+  const openEditUser = (u) => {
+    setEditingUser(u)
+    setUserForm({ username: u.username, email: u.email, password: '', role: u.role })
+    setShowUserModal(true)
+  }
+
+  const saveUser = async () => {
+    if (editingUser) {
+      await api.put(`/api/users/${editingUser.id}`, userForm)
+    } else {
+      await api.post('/api/users', userForm)
+    }
+    setShowUserModal(false)
+    fetchAll()
+  }
+
+  const deleteUser = async (id) => {
+    if (!window.confirm('Eliminare questo utente?')) return
+    await api.delete(`/api/users/${id}`)
+    fetchAll()
+  }
+
+
 
   const btn = (label, onClick, color = '#1677ff') => (
     <button onClick={onClick} style={{
@@ -191,13 +263,22 @@ export default function Dashboard() {
         {/* CATEGORIE */}
         {page === 'categories' && (
           <div>
-            <h2 style={{ marginBottom: 20 }}>🏷️ Categorie</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2>🏷️ Categorie</h2>
+              {user?.role === 'admin' && btn('+ Nuova Categoria', openNewCat)}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
               {categories.map(cat => (
                 <div key={cat.id} style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{cat.name}</div>
                   <div style={{ color: '#8c8c8c', fontSize: 13 }}>{cat.description || 'Nessuna descrizione'}</div>
                   <div style={{ marginTop: 12, color: '#1677ff', fontSize: 13 }}>{items.filter(i => i.category === cat.name).length} articoli</div>
+                  {user?.role === 'admin' && (
+                    <div style={{ marginTop: 12, display: 'flex', gap: 6 }}>
+                      {btn('✏️ Modifica', () => openEditCat(cat), '#faad14')}
+                      {btn('🗑️ Elimina', () => deleteCat(cat.id), '#ff4d4f')}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -207,12 +288,15 @@ export default function Dashboard() {
         {/* UTENTI */}
         {page === 'users' && (
           <div>
-            <h2 style={{ marginBottom: 20 }}>👥 Utenti</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2>👥 Utenti</h2>
+              {btn('+ Nuovo Utente', openNewUser)}
+            </div>
             <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#fafafa' }}>
-                    {['ID', 'Username', 'Email', 'Ruolo', 'Creato il'].map(h => (
+                    {['ID', 'Username', 'Email', 'Ruolo', 'Creato il', 'Azioni'].map(h => (
                       <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, color: '#8c8c8c', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>{h}</th>
                     ))}
                   </tr>
@@ -227,6 +311,10 @@ export default function Dashboard() {
                         <span style={{ background: u.role === 'admin' ? '#f9f0ff' : '#f6ffed', color: u.role === 'admin' ? '#531dab' : '#389e0d', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{u.role}</span>
                       </td>
                       <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>{new Date(u.created_at).toLocaleDateString('it-IT')}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        {btn('✏️', () => openEditUser(u), '#faad14')}
+                        {btn('🗑️', () => deleteUser(u.id), '#ff4d4f')}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -258,6 +346,66 @@ export default function Dashboard() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
               <button onClick={() => setShowItemModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
               <button onClick={saveItem} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* MODAL CATEGORIA */}
+      {showCatModal && (
+        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginBottom: 20 }}>{editingCat ? '✏️ Modifica Categoria' : '✚ Nuova Categoria'}</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Nome *</label>
+              <input value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Descrizione</label>
+              <input value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button onClick={() => setShowCatModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
+              <button onClick={saveCat} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* MODAL UTENTE */}
+      {showUserModal && (
+        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginBottom: 20 }}>{editingUser ? '✏️ Modifica Utente' : '✚ Nuovo Utente'}</h3>
+            {['username', 'email', 'password'].map(field => (
+              <div key={field} style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>
+                  {field === 'username' ? 'Username *' : field === 'email' ? 'Email *' : editingUser ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password *'}
+                </label>
+                <input
+                  type={field === 'password' ? 'password' : 'text'}
+                  value={userForm[field]}
+                  onChange={e => setUserForm({ ...userForm, [field]: e.target.value })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }}
+                />
+              </div>
+            ))}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Ruolo *</label>
+              <select value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
+                <option value="viewer">Viewer</option>
+                <option value="magazziniere">Magazziniere</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button onClick={() => setShowUserModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
+              <button onClick={saveUser} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
             </div>
           </div>
         </div>
