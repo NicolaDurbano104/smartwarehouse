@@ -11,16 +11,11 @@ export default function Login() {
     setLoading(true)
     setError('')
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        username,
-        password
-      })
-      // Salva il token e i dati utente
+      const res = await axios.post('http://localhost:5000/api/auth/login', { username, password })
       localStorage.setItem('token', res.data.token)
       localStorage.setItem('user', JSON.stringify(res.data.user))
-      // Vai alla dashboard
       window.location.href = '/dashboard'
-    } catch (err) {
+    } catch {
       setError('Credenziali non valide')
     } finally {
       setLoading(false)
@@ -30,40 +25,44 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f0f2f5',
+      background: '#F4F6FA',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
     }}>
       <div style={{
         background: '#fff',
-        borderRadius: 12,
-        padding: 40,
-        width: 380,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.10)'
+        borderRadius: 14,
+        padding: '48px 44px',
+        width: '100%',
+        maxWidth: 400,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.05)',
+        border: '1px solid #E5E7EB',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 40 }}>📦</div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '8px 0 4px' }}>SmartWarehouse</h1>
-          <p style={{ color: '#8c8c8c', fontSize: 14 }}>Gestionale Magazzino Scolastico</p>
+        {/* Logo e benvenuto */}
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div style={{ fontSize: 42, marginBottom: 12 }}>📦</div>
+          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.4px', marginBottom: 6 }}>
+            SmartWarehouse
+          </div>
+          <div style={{ color: '#6B7280', fontSize: 13.5, lineHeight: 1.6 }}>
+            Bentornato. Accedi per gestire il magazzino.
+          </div>
         </div>
 
         {error && (
           <div style={{
-            background: '#fff2f0',
-            border: '1px solid #ffccc7',
-            borderRadius: 8,
-            padding: '10px 14px',
-            color: '#cf1322',
-            fontSize: 13,
-            marginBottom: 16
+            background: '#FEF2F2', border: '1px solid #FECACA',
+            borderRadius: 8, padding: '10px 14px',
+            color: '#DC2626', fontSize: 13, marginBottom: 20
           }}>
             ⚠️ {error}
           </div>
         )}
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: '#111827' }}>
             Username
           </label>
           <input
@@ -72,19 +71,15 @@ export default function Login() {
             onChange={e => setUsername(e.target.value)}
             placeholder="es. admin"
             style={{
-              width: '100%',
-              padding: '10px 12px',
-              borderRadius: 8,
-              border: '1px solid #d9d9d9',
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box'
+              width: '100%', padding: '10px 12px', borderRadius: 7,
+              border: '1.5px solid #E5E7EB', fontSize: 13.5,
+              outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
             }}
           />
         </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+        <div style={{ marginBottom: 28 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: '#111827' }}>
             Password
           </label>
           <input
@@ -94,13 +89,9 @@ export default function Login() {
             placeholder="••••••••"
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             style={{
-              width: '100%',
-              padding: '10px 12px',
-              borderRadius: 8,
-              border: '1px solid #d9d9d9',
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box'
+              width: '100%', padding: '10px 12px', borderRadius: 7,
+              border: '1.5px solid #E5E7EB', fontSize: 13.5,
+              outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
             }}
           />
         </div>
@@ -109,18 +100,14 @@ export default function Login() {
           onClick={handleLogin}
           disabled={loading}
           style={{
-            width: '100%',
-            padding: '11px',
-            background: loading ? '#91caff' : '#1677ff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer'
+            width: '100%', padding: '11px',
+            background: loading ? '#93C5FD' : '#2563EB',
+            color: '#fff', border: 'none', borderRadius: 7,
+            fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit', transition: 'background 0.15s',
           }}
         >
-          {loading ? 'Accesso in corso...' : 'Accedi'}
+          {loading ? 'Accesso in corso...' : 'Accedi →'}
         </button>
       </div>
     </div>

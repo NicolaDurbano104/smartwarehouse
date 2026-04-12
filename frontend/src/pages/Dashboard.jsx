@@ -9,29 +9,126 @@ const api = axios.create({
   headers: { Authorization: `Bearer ${token}` }
 })
 
+const C = {
+  bg: '#F4F6FA',
+  sidebar: '#0F1623',
+  sidebarBorder: '#1E2A3A',
+  primary: '#2563EB',
+  primaryHover: '#1D4ED8',
+  success: '#16A34A',
+  warning: '#D97706',
+  danger: '#DC2626',
+  white: '#FFFFFF',
+  text: '#111827',
+  textSub: '#6B7280',
+  border: '#E5E7EB',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
+  cardShadowHover: '0 4px 12px rgba(0,0,0,0.10)',
+}
+
+const styles = {
+  app: { display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", background: C.bg, color: C.text },
+  sidebar: { width: 240, background: C.sidebar, display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 },
+  logoBox: { padding: '24px 20px 20px', borderBottom: `1px solid ${C.sidebarBorder}` },
+  logoTitle: { color: '#fff', fontSize: 16, fontWeight: 700, letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8 },
+  logoSub: { color: '#4B5563', fontSize: 11, marginTop: 3, letterSpacing: '0.5px', textTransform: 'uppercase' },
+  nav: { padding: '16px 12px', flex: 1 },
+  navSection: { color: '#374151', fontSize: 10, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', padding: '10px 8px 6px' },
+  main: { marginLeft: 240, flex: 1, display: 'flex', flexDirection: 'column' },
+  topbar: { background: C.white, borderBottom: `1px solid ${C.border}`, padding: '0 28px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' },
+  content: { padding: 28, flex: 1 },
+  pageHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  pageTitle: { fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px' },
+  pageSub: { color: C.textSub, fontSize: 13, marginTop: 2 },
+  card: { background: C.white, borderRadius: 10, boxShadow: C.cardShadow, border: `1px solid ${C.border}` },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  th: { padding: '11px 16px', textAlign: 'left', fontSize: 11, color: C.textSub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px', background: '#F9FAFB', borderBottom: `1px solid ${C.border}` },
+  td: { padding: '13px 16px', fontSize: 13.5, borderBottom: `1px solid #F3F4F6`, verticalAlign: 'middle' },
+  modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(3px)' },
+  modal: { background: C.white, borderRadius: 14, width: 460, maxWidth: '95vw', boxShadow: '0 25px 60px rgba(0,0,0,0.18)', overflow: 'hidden' },
+  modalHeader: { padding: '20px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  modalBody: { padding: '20px 24px' },
+  modalFooter: { padding: '16px 24px', borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8, background: '#F9FAFB' },
+}
+
+function NavItem({ icon, label, active, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+      borderRadius: 7, cursor: 'pointer', marginBottom: 2, fontSize: 13.5, fontWeight: active ? 600 : 400,
+      background: active ? C.primary : 'transparent',
+      color: active ? '#fff' : '#9CA3AF',
+      transition: 'all 0.15s',
+    }}>
+      <span style={{ fontSize: 16, width: 20, textAlign: 'center' }}>{icon}</span>
+      {label}
+    </div>
+  )
+}
+
+function StatCard({ icon, label, value, color, sub }) {
+  return (
+    <div style={{ ...styles.card, padding: 20, display: 'flex', gap: 16, alignItems: 'center', transition: 'box-shadow 0.2s' }}>
+      <div style={{ width: 50, height: 50, borderRadius: 12, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{icon}</div>
+      <div>
+        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</div>
+        <div style={{ color: C.textSub, fontSize: 12.5, marginTop: 4 }}>{label}</div>
+        {sub && <div style={{ fontSize: 11, marginTop: 3, color: sub.color }}>{sub.text}</div>}
+      </div>
+    </div>
+  )
+}
+
+function Btn({ label, onClick, color = C.primary, small = false, outline = false }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: small ? '6px 12px' : '9px 18px',
+      background: outline ? 'transparent' : color,
+      color: outline ? color : '#fff',
+      border: outline ? `1.5px solid ${color}` : 'none',
+      borderRadius: 7, cursor: 'pointer',
+      fontSize: small ? 12 : 13.5, fontWeight: 500,
+      marginLeft: small ? 6 : 0,
+      transition: 'all 0.15s',
+      fontFamily: 'inherit',
+    }}>{label}</button>
+  )
+}
+
+function Badge({ text, color, bg }) {
+  return <span style={{ background: bg, color, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{text}</span>
+}
+
+function FormField({ label, children }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 5, color: C.text }}>{label}</label>
+      {children}
+    </div>
+  )
+}
+
+const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: `1.5px solid ${C.border}`, fontSize: 13.5, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', color: C.text }
+
 export default function Dashboard() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [users, setUsers] = useState([])
+  const [movements, setMovements] = useState([])
   const [page, setPage] = useState('dashboard')
 
-  // Stati per il modal articoli
   const [showItemModal, setShowItemModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [itemForm, setItemForm] = useState({ name: '', description: '', category_id: '', quantity: 0, min_threshold: 5, unit: 'pezzi' })
 
-  // Stati per il modal categorie
   const [showCatModal, setShowCatModal] = useState(false)
   const [editingCat, setEditingCat] = useState(null)
   const [catForm, setCatForm] = useState({ name: '', description: '' })
 
-  // Stati per il modal utenti
   const [showUserModal, setShowUserModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [userForm, setUserForm] = useState({ username: '', email: '', password: '', role: 'viewer' })
 
-  // Stati per i movimenti
-  const [movements, setMovements] = useState([])
   const [showMovModal, setShowMovModal] = useState(false)
   const [movForm, setMovForm] = useState({ item_id: '', type: 'IN', quantity: 1, note: '' })
 
@@ -46,435 +143,360 @@ export default function Dashboard() {
 
   const critici = items.filter(i => i.quantity === 0)
   const sottoSoglia = items.filter(i => i.quantity > 0 && i.quantity < i.min_threshold)
+  const logout = () => { localStorage.clear(); window.location.href = '/login' }
 
-  const logout = () => {
-    localStorage.clear()
-    window.location.href = '/login'
-  }
+  const openNewItem = () => { setEditingItem(null); setItemForm({ name: '', description: '', category_id: categories[0]?.id || '', quantity: 0, min_threshold: 5, unit: 'pezzi' }); setShowItemModal(true) }
+  const openEditItem = (item) => { setEditingItem(item); setItemForm({ name: item.name, description: item.description || '', category_id: item.category_id, quantity: item.quantity, min_threshold: item.min_threshold, unit: item.unit }); setShowItemModal(true) }
+  const saveItem = async () => { if (editingItem) { await api.put(`/api/items/${editingItem.id}`, itemForm) } else { await api.post('/api/items', itemForm) }; setShowItemModal(false); fetchAll() }
+  const deleteItem = async (id) => { if (!window.confirm('Eliminare questo articolo?')) return; await api.delete(`/api/items/${id}`); fetchAll() }
 
-  // ── ARTICOLI ──
-  const openNewItem = () => {
-    setEditingItem(null)
-    setItemForm({ name: '', description: '', category_id: categories[0]?.id || '', quantity: 0, min_threshold: 5, unit: 'pezzi' })
-    setShowItemModal(true)
-  }
+  const openNewCat = () => { setEditingCat(null); setCatForm({ name: '', description: '' }); setShowCatModal(true) }
+  const openEditCat = (cat) => { setEditingCat(cat); setCatForm({ name: cat.name, description: cat.description || '' }); setShowCatModal(true) }
+  const saveCat = async () => { if (editingCat) { await api.put(`/api/categories/${editingCat.id}`, catForm) } else { await api.post('/api/categories', catForm) }; setShowCatModal(false); fetchAll() }
+  const deleteCat = async (id) => { if (!window.confirm('Eliminare questa categoria?')) return; await api.delete(`/api/categories/${id}`); fetchAll() }
 
-  const openEditItem = (item) => {
-    setEditingItem(item)
-    setItemForm({ name: item.name, description: item.description || '', category_id: item.category_id, quantity: item.quantity, min_threshold: item.min_threshold, unit: item.unit })
-    setShowItemModal(true)
-  }
+  const openNewUser = () => { setEditingUser(null); setUserForm({ username: '', email: '', password: '', role: 'viewer' }); setShowUserModal(true) }
+  const openEditUser = (u) => { setEditingUser(u); setUserForm({ username: u.username, email: u.email, password: '', role: u.role }); setShowUserModal(true) }
+  const saveUser = async () => { if (editingUser) { await api.put(`/api/users/${editingUser.id}`, userForm) } else { await api.post('/api/users', userForm) }; setShowUserModal(false); fetchAll() }
+  const deleteUser = async (id) => { if (!window.confirm('Eliminare questo utente?')) return; await api.delete(`/api/users/${id}`); fetchAll() }
 
-  const saveItem = async () => {
-    if (editingItem) {
-      await api.put(`/api/items/${editingItem.id}`, itemForm)
-    } else {
-      await api.post('/api/items', itemForm)
-    }
-    setShowItemModal(false)
-    fetchAll()
-  }
+  const openNewMov = () => { setMovForm({ item_id: items[0]?.id || '', type: 'IN', quantity: 1, note: '' }); setShowMovModal(true) }
+  const saveMov = async () => { await api.post('/api/movements', movForm); setShowMovModal(false); fetchAll() }
 
-  const deleteItem = async (id) => {
-    if (!window.confirm('Eliminare questo articolo?')) return
-    await api.delete(`/api/items/${id}`)
-    fetchAll()
-  }
-
-
-  // ── CATEGORIE ──
-  const openNewCat = () => {
-    setEditingCat(null)
-    setCatForm({ name: '', description: '' })
-    setShowCatModal(true)
-  }
-
-  const openEditCat = (cat) => {
-    setEditingCat(cat)
-    setCatForm({ name: cat.name, description: cat.description || '' })
-    setShowCatModal(true)
-  }
-
-  const saveCat = async () => {
-    if (editingCat) {
-      await api.put(`/api/categories/${editingCat.id}`, catForm)
-    } else {
-      await api.post('/api/categories', catForm)
-    }
-    setShowCatModal(false)
-    fetchAll()
-  }
-
-  const deleteCat = async (id) => {
-    if (!window.confirm('Eliminare questa categoria?')) return
-    await api.delete(`/api/categories/${id}`)
-    fetchAll()
-  }
-
-
-  // ── UTENTI ──
-  const openNewUser = () => {
-    setEditingUser(null)
-    setUserForm({ username: '', email: '', password: '', role: 'viewer' })
-    setShowUserModal(true)
-  }
-
-  const openEditUser = (u) => {
-    setEditingUser(u)
-    setUserForm({ username: u.username, email: u.email, password: '', role: u.role })
-    setShowUserModal(true)
-  }
-
-  const saveUser = async () => {
-    if (editingUser) {
-      await api.put(`/api/users/${editingUser.id}`, userForm)
-    } else {
-      await api.post('/api/users', userForm)
-    }
-    setShowUserModal(false)
-    fetchAll()
-  }
-
-  const deleteUser = async (id) => {
-    if (!window.confirm('Eliminare questo utente?')) return
-    await api.delete(`/api/users/${id}`)
-    fetchAll()
-  }
-
-  // ── MOVIMENTI ──
-  const openNewMov = () => {
-    setMovForm({ item_id: items[0]?.id || '', type: 'IN', quantity: 1, note: '' })
-    setShowMovModal(true)
-  }
-
-  const saveMov = async () => {
-    await api.post('/api/movements', movForm)
-    setShowMovModal(false)
-    fetchAll()
-  }
-
-
-
-  const btn = (label, onClick, color = '#1677ff') => (
-    <button onClick={onClick} style={{
-      padding: '6px 12px', background: color, color: '#fff',
-      border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginLeft: 6
-    }}>{label}</button>
-  )
-
-  const input = (field, label, type = 'text') => (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{label}</label>
-      <input type={type} value={itemForm[field]}
-        onChange={e => setItemForm({ ...itemForm, [field]: type === 'number' ? parseInt(e.target.value) : e.target.value })}
-        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }}
-      />
-    </div>
-  )
+  const roleColor = (role) => role === 'admin' ? { bg: '#EFF6FF', color: '#1D4ED8' } : role === 'magazziniere' ? { bg: '#F0FDF4', color: '#16A34A' } : { bg: '#F9FAFB', color: '#6B7280' }
+  const statusInfo = (item) => item.quantity === 0 ? { label: 'Esaurito', color: C.danger, bg: '#FEF2F2' } : item.quantity < item.min_threshold ? { label: 'Sotto soglia', color: C.warning, bg: '#FFFBEB' } : { label: 'Disponibile', color: C.success, bg: '#F0FDF4' }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+    <div style={styles.app}>
 
       {/* SIDEBAR */}
-      <aside style={{ width: 220, background: '#001529', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0 }}>
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #ffffff12' }}>
-          <div style={{ color: '#fff', fontSize: 17, fontWeight: 700 }}>📦 SmartWarehouse</div>
-          <div style={{ color: '#ffffff55', fontSize: 11, marginTop: 2 }}>Magazzino Scolastico</div>
+      <aside style={styles.sidebar}>
+        <div style={styles.logoBox}>
+          <div style={styles.logoTitle}>📦 SmartWarehouse</div>
+          <div style={styles.logoSub}>Magazzino Scolastico</div>
         </div>
-        <nav style={{ padding: '12px 8px', flex: 1 }}>
-          {[
-            { key: 'dashboard', icon: '📊', label: 'Dashboard' },
-            { key: 'items', icon: '📦', label: 'Scorte' },
-            { key: 'movements', icon: '🔄', label: 'Movimenti' },
-            { key: 'categories', icon: '🏷️', label: 'Categorie' },
-            ...(user?.role === 'admin' ? [{ key: 'users', icon: '👥', label: 'Utenti' }] : []),
-          ].map(item => (
-            <div key={item.key} onClick={() => setPage(item.key)} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 12px', borderRadius: 6, cursor: 'pointer', marginBottom: 2, fontSize: 13.5,
-              background: page === item.key ? '#1677ff' : 'transparent',
-              color: page === item.key ? '#fff' : '#ffffffaa',
-            }}>
-              <span>{item.icon}</span> {item.label}
-            </div>
-          ))}
+        <nav style={styles.nav}>
+          <div style={styles.navSection}>Principale</div>
+          <NavItem icon="📊" label="Dashboard" active={page === 'dashboard'} onClick={() => setPage('dashboard')} />
+          <NavItem icon="📦" label="Scorte" active={page === 'items'} onClick={() => setPage('items')} />
+          <NavItem icon="🔄" label="Movimenti" active={page === 'movements'} onClick={() => setPage('movements')} />
+          <NavItem icon="🏷️" label="Categorie" active={page === 'categories'} onClick={() => setPage('categories')} />
+          {user?.role === 'admin' && <>
+            <div style={styles.navSection}>Amministrazione</div>
+            <NavItem icon="👥" label="Utenti" active={page === 'users'} onClick={() => setPage('users')} />
+          </>}
         </nav>
-        <div style={{ padding: '12px 16px', borderTop: '1px solid #ffffff12' }}>
-          <div style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>👤 {user?.username}</div>
-          <div style={{ color: '#ffffff55', fontSize: 11 }}>{user?.role}</div>
-          <button onClick={logout} style={{ marginTop: 10, width: '100%', padding: '7px', background: '#ff4d4f', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>Logout</button>
+        <div style={{ padding: '16px 16px 20px', borderTop: `1px solid ${C.sidebarBorder}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+              {user?.username?.[0]?.toUpperCase()}
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{user?.username}</div>
+              <div style={{ color: '#4B5563', fontSize: 11 }}>{user?.role}</div>
+            </div>
+          </div>
+          <button onClick={logout} style={{ width: '100%', padding: '8px', background: 'transparent', color: '#6B7280', border: `1px solid #1E2A3A`, borderRadius: 7, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', transition: 'all 0.15s' }}>
+            Esci
+          </button>
         </div>
       </aside>
 
       {/* MAIN */}
-      <main style={{ marginLeft: 220, flex: 1, background: '#f0f2f5', padding: 24 }}>
-
-        {/* DASHBOARD */}
-        {page === 'dashboard' && (
-          <div>
-            <h2 style={{ marginBottom: 20 }}>📊 Dashboard</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-              {[
-                { label: 'Articoli totali', value: items.length, icon: '📦', color: '#e6f4ff' },
-                { label: 'Categorie', value: categories.length, icon: '🏷️', color: '#f6ffed' },
-                { label: 'Sotto soglia', value: sottoSoglia.length, icon: '⚠️', color: '#fff7e6' },
-                { label: 'Esauriti', value: critici.length, icon: '🚫', color: '#fff2f0' },
-              ].map((s, i) => (
-                <div key={i} style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', gap: 16, alignItems: 'center' }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 10, background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{s.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 26, fontWeight: 700 }}>{s.value}</div>
-                    <div style={{ color: '#8c8c8c', fontSize: 12.5 }}>{s.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {(critici.length > 0 || sottoSoglia.length > 0) && (
-              <div style={{ background: '#fff2f0', border: '1px solid #ffccc7', borderRadius: 8, padding: '12px 16px', color: '#cf1322', marginBottom: 24 }}>
-                ⚠️ <strong>{critici.length + sottoSoglia.length} articoli</strong> richiedono attenzione!
-              </div>
-            )}
+      <main style={styles.main}>
+        <header style={styles.topbar}>
+          <div style={{ fontSize: 13, color: C.textSub }}>
+            <span style={{ color: C.textSub }}>SmartWarehouse</span>
+            <span style={{ margin: '0 6px' }}>›</span>
+            <span style={{ color: C.text, fontWeight: 500 }}>
+              {{ dashboard: 'Dashboard', items: 'Scorte', movements: 'Movimenti', categories: 'Categorie', users: 'Utenti' }[page]}
+            </span>
           </div>
-        )}
+          <div style={{ fontSize: 13, color: C.textSub }}>
+            {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+        </header>
 
-        {/* SCORTE */}
-        {page === 'items' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2>📦 Scorte</h2>
-              {user?.role !== 'viewer' && btn('+ Nuovo Articolo', openNewItem)}
-            </div>
-            <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: '#fafafa' }}>
-                    {['Nome', 'Categoria', 'Quantità', 'Soglia Min.', 'Unità', 'Stato', 'Azioni'].map(h => (
-                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, color: '#8c8c8c', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map(item => {
-                    const status = item.quantity === 0 ? { label: 'Esaurito', color: '#ff4d4f', bg: '#fff2f0' }
-                      : item.quantity < item.min_threshold ? { label: 'Sotto soglia', color: '#d46b08', bg: '#fff7e6' }
-                      : { label: 'Disponibile', color: '#389e0d', bg: '#f6ffed' }
+        <div style={styles.content}>
+
+          {/* DASHBOARD */}
+          {page === 'dashboard' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Benvenuto, {user?.username} 👋</div>
+                  <div style={styles.pageSub}>Ecco un riepilogo del magazzino</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+                <StatCard icon="📦" label="Articoli totali" value={items.length} color={C.primary} />
+                <StatCard icon="🏷️" label="Categorie" value={categories.length} color={C.success} />
+                <StatCard icon="⚠️" label="Sotto soglia" value={sottoSoglia.length} color={C.warning} sub={sottoSoglia.length > 0 ? { text: 'Richiedono attenzione', color: C.warning } : null} />
+                <StatCard icon="🚫" label="Esauriti" value={critici.length} color={C.danger} sub={critici.length > 0 ? { text: 'Ordine necessario', color: C.danger } : null} />
+              </div>
+
+              {(critici.length > 0 || sottoSoglia.length > 0) && (
+                <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '14px 18px', color: C.danger, marginBottom: 24, fontSize: 13.5 }}>
+                  ⚠️ <strong>{critici.length + sottoSoglia.length} articoli</strong> richiedono attenzione — controlla le scorte.
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={styles.card}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 600, fontSize: 14 }}>📦 Ultimi articoli aggiunti</div>
+                  {items.slice(0, 5).map(item => {
+                    const s = statusInfo(item)
                     return (
-                      <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                        <td style={{ padding: '14px 16px', fontWeight: 500 }}>{item.name}</td>
-                        <td style={{ padding: '14px 16px' }}><span style={{ background: '#e6f4ff', color: '#0958d9', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>{item.category}</span></td>
-                        <td style={{ padding: '14px 16px', fontWeight: 600 }}>{item.quantity}</td>
-                        <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{item.min_threshold}</td>
-                        <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{item.unit}</td>
-                        <td style={{ padding: '14px 16px' }}><span style={{ background: status.bg, color: status.color, padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{status.label}</span></td>
-                        <td style={{ padding: '14px 16px' }}>
-                          {user?.role !== 'viewer' && btn('✏️', () => openEditItem(item), '#faad14')}
-                          {user?.role === 'admin' && btn('🗑️', () => deleteItem(item.id), '#ff4d4f')}
-                        </td>
-                      </tr>
+                      <div key={item.id} style={{ padding: '12px 20px', borderBottom: `1px solid #F9FAFB`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 500 }}>{item.name}</span>
+                        <Badge text={s.label} color={s.color} bg={s.bg} />
+                      </div>
                     )
                   })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* MOVIMENTI */}
-        {page === 'movements' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2>🔄 Movimenti</h2>
-              {user?.role !== 'viewer' && btn('+ Registra Movimento', openNewMov)}
-            </div>
-            <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: '#fafafa' }}>
-                    {['Articolo', 'Tipo', 'Quantità', 'Utente', 'Note', 'Data'].map(h => (
-                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, color: '#8c8c8c', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {movements.length === 0 && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#8c8c8c' }}>Nessun movimento registrato</td>
-                    </tr>
-                  )}
-                  {movements.map(m => (
-                    <tr key={m.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{m.item}</td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{
-                          background: m.type === 'IN' ? '#f6ffed' : '#fff2f0',
-                          color: m.type === 'IN' ? '#389e0d' : '#cf1322',
-                          padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500
-                        }}>
-                          {m.type === 'IN' ? '⬆️ Entrata' : '⬇️ Uscita'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 16px', fontWeight: 600, color: m.quantity_delta > 0 ? '#389e0d' : '#cf1322' }}>
-                        {m.quantity_delta > 0 ? '+' : ''}{m.quantity_delta}
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{m.user}</td>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>{m.note || '—'}</td>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>
-                        {new Date(m.timestamp).toLocaleDateString('it-IT')} {new Date(m.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* CATEGORIE */}
-        {page === 'categories' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2>🏷️ Categorie</h2>
-              {user?.role === 'admin' && btn('+ Nuova Categoria', openNewCat)}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-              {categories.map(cat => (
-                <div key={cat.id} style={{ background: '#fff', borderRadius: 8, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{cat.name}</div>
-                  <div style={{ color: '#8c8c8c', fontSize: 13 }}>{cat.description || 'Nessuna descrizione'}</div>
-                  <div style={{ marginTop: 12, color: '#1677ff', fontSize: 13 }}>{items.filter(i => i.category === cat.name).length} articoli</div>
-                  {user?.role === 'admin' && (
-                    <div style={{ marginTop: 12, display: 'flex', gap: 6 }}>
-                      {btn('✏️ Modifica', () => openEditCat(cat), '#faad14')}
-                      {btn('🗑️ Elimina', () => deleteCat(cat.id), '#ff4d4f')}
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* UTENTI */}
-        {page === 'users' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2>👥 Utenti</h2>
-              {btn('+ Nuovo Utente', openNewUser)}
-            </div>
-            <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: '#fafafa' }}>
-                    {['ID', 'Username', 'Email', 'Ruolo', 'Creato il', 'Azioni'].map(h => (
-                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, color: '#8c8c8c', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(u => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{u.id}</td>
-                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>👤 {u.username}</td>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{u.email}</td>
-                      <td style={{ padding: '14px 16px' }}>
-                        <span style={{ background: u.role === 'admin' ? '#f9f0ff' : '#f6ffed', color: u.role === 'admin' ? '#531dab' : '#389e0d', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>{u.role}</span>
-                      </td>
-                      <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>{new Date(u.created_at).toLocaleDateString('it-IT')}</td>
-                      <td style={{ padding: '14px 16px' }}>
-                        {btn('✏️', () => openEditUser(u), '#faad14')}
-                        {btn('🗑️', () => deleteUser(u.id), '#ff4d4f')}
-                      </td>
-                    </tr>
+                <div style={styles.card}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 600, fontSize: 14 }}>🔄 Ultimi movimenti</div>
+                  {movements.slice(0, 5).map(m => (
+                    <div key={m.id} style={{ padding: '12px 20px', borderBottom: `1px solid #F9FAFB`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 13.5 }}>{m.item}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: m.quantity_delta > 0 ? C.success : C.danger }}>
+                        {m.quantity_delta > 0 ? '+' : ''}{m.quantity_delta}
+                      </span>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                  {movements.length === 0 && <div style={{ padding: 20, color: C.textSub, fontSize: 13 }}>Nessun movimento ancora</div>}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* SCORTE */}
+          {page === 'items' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Scorte</div>
+                  <div style={styles.pageSub}>{items.length} articoli totali</div>
+                </div>
+                {user?.role !== 'viewer' && <Btn label="+ Nuovo Articolo" onClick={openNewItem} />}
+              </div>
+              <div style={styles.card}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>{['Nome', 'Categoria', 'Quantità', 'Soglia Min.', 'Unità', 'Stato', 'Azioni'].map(h => <th key={h} style={styles.th}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {items.map(item => {
+                      const s = statusInfo(item)
+                      return (
+                        <tr key={item.id} style={{ transition: 'background 0.1s' }}>
+                          <td style={{ ...styles.td, fontWeight: 600 }}>{item.name}</td>
+                          <td style={styles.td}><Badge text={item.category} color={C.primary} bg="#EFF6FF" /></td>
+                          <td style={{ ...styles.td, fontWeight: 700, fontSize: 15 }}>{item.quantity}</td>
+                          <td style={{ ...styles.td, color: C.textSub }}>{item.min_threshold}</td>
+                          <td style={{ ...styles.td, color: C.textSub }}>{item.unit}</td>
+                          <td style={styles.td}><Badge text={s.label} color={s.color} bg={s.bg} /></td>
+                          <td style={styles.td}>
+                            {user?.role !== 'viewer' && <Btn label="✏️" onClick={() => openEditItem(item)} color={C.warning} small />}
+                            {user?.role === 'admin' && <Btn label="🗑️" onClick={() => deleteItem(item.id)} color={C.danger} small />}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* MOVIMENTI */}
+          {page === 'movements' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Movimenti</div>
+                  <div style={styles.pageSub}>{movements.length} movimenti registrati</div>
+                </div>
+                {user?.role !== 'viewer' && <Btn label="+ Registra Movimento" onClick={openNewMov} />}
+              </div>
+              <div style={styles.card}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>{['Articolo', 'Tipo', 'Quantità', 'Utente', 'Note', 'Data'].map(h => <th key={h} style={styles.th}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {movements.length === 0 && (
+                      <tr><td colSpan={6} style={{ ...styles.td, textAlign: 'center', color: C.textSub, padding: 32 }}>Nessun movimento registrato</td></tr>
+                    )}
+                    {movements.map(m => (
+                      <tr key={m.id}>
+                        <td style={{ ...styles.td, fontWeight: 600 }}>{m.item}</td>
+                        <td style={styles.td}><Badge text={m.type === 'IN' ? '⬆ Entrata' : '⬇ Uscita'} color={m.type === 'IN' ? C.success : C.danger} bg={m.type === 'IN' ? '#F0FDF4' : '#FEF2F2'} /></td>
+                        <td style={{ ...styles.td, fontWeight: 700, color: m.quantity_delta > 0 ? C.success : C.danger }}>{m.quantity_delta > 0 ? '+' : ''}{m.quantity_delta}</td>
+                        <td style={{ ...styles.td, color: C.textSub }}>{m.user}</td>
+                        <td style={{ ...styles.td, color: C.textSub }}>{m.note || '—'}</td>
+                        <td style={{ ...styles.td, color: C.textSub, fontSize: 12.5 }}>{new Date(m.timestamp).toLocaleDateString('it-IT')} {new Date(m.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* CATEGORIE */}
+          {page === 'categories' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Categorie</div>
+                  <div style={styles.pageSub}>{categories.length} categorie totali</div>
+                </div>
+                {user?.role === 'admin' && <Btn label="+ Nuova Categoria" onClick={openNewCat} />}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+                {categories.map(cat => (
+                  <div key={cat.id} style={{ ...styles.card, padding: 22, transition: 'box-shadow 0.2s' }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{cat.name}</div>
+                    <div style={{ color: C.textSub, fontSize: 13, marginBottom: 14 }}>{cat.description || 'Nessuna descrizione'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: C.primary, fontSize: 13, fontWeight: 500 }}>{items.filter(i => i.category === cat.name).length} articoli</span>
+                      {user?.role === 'admin' && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Btn label="✏️" onClick={() => openEditCat(cat)} color={C.warning} small />
+                          <Btn label="🗑️" onClick={() => deleteCat(cat.id)} color={C.danger} small />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* UTENTI */}
+          {page === 'users' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Utenti</div>
+                  <div style={styles.pageSub}>{users.length} utenti registrati</div>
+                </div>
+                <Btn label="+ Nuovo Utente" onClick={openNewUser} />
+              </div>
+              <div style={styles.card}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>{['ID', 'Username', 'Email', 'Ruolo', 'Creato il', 'Azioni'].map(h => <th key={h} style={styles.th}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => {
+                      const rc = roleColor(u.role)
+                      return (
+                        <tr key={u.id}>
+                          <td style={{ ...styles.td, color: C.textSub }}>{u.id}</td>
+                          <td style={{ ...styles.td, fontWeight: 600 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: C.primary }}>
+                                {u.username[0].toUpperCase()}
+                              </div>
+                              {u.username}
+                            </div>
+                          </td>
+                          <td style={{ ...styles.td, color: C.textSub }}>{u.email}</td>
+                          <td style={styles.td}><Badge text={u.role} color={rc.color} bg={rc.bg} /></td>
+                          <td style={{ ...styles.td, color: C.textSub, fontSize: 12.5 }}>{new Date(u.created_at).toLocaleDateString('it-IT')}</td>
+                          <td style={styles.td}>
+                            <Btn label="✏️" onClick={() => openEditUser(u)} color={C.warning} small />
+                            <Btn label="🗑️" onClick={() => deleteUser(u.id)} color={C.danger} small />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* MODAL ARTICOLO */}
       {showItemModal && (
-        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, width: 460, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ marginBottom: 20 }}>{editingItem ? '✏️ Modifica Articolo' : '✚ Nuovo Articolo'}</h3>
-            {input('name', 'Nome articolo *')}
-            {input('description', 'Descrizione')}
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Categoria *</label>
-              <select value={itemForm.category_id} onChange={e => setItemForm({ ...itemForm, category_id: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <div style={styles.modalHeader}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>{editingItem ? '✏️ Modifica Articolo' : '✚ Nuovo Articolo'}</span>
+              <button onClick={() => setShowItemModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: C.textSub }}>✕</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {input('quantity', 'Quantità *', 'number')}
-              {input('min_threshold', 'Soglia minima *', 'number')}
+            <div style={styles.modalBody}>
+              <FormField label="Nome articolo *"><input style={inputStyle} value={itemForm.name} onChange={e => setItemForm({ ...itemForm, name: e.target.value })} /></FormField>
+              <FormField label="Descrizione"><input style={inputStyle} value={itemForm.description} onChange={e => setItemForm({ ...itemForm, description: e.target.value })} /></FormField>
+              <FormField label="Categoria *">
+                <select style={inputStyle} value={itemForm.category_id} onChange={e => setItemForm({ ...itemForm, category_id: parseInt(e.target.value) })}>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </FormField>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <FormField label="Quantità *"><input style={inputStyle} type="number" value={itemForm.quantity} onChange={e => setItemForm({ ...itemForm, quantity: parseInt(e.target.value) })} /></FormField>
+                <FormField label="Soglia min. *"><input style={inputStyle} type="number" value={itemForm.min_threshold} onChange={e => setItemForm({ ...itemForm, min_threshold: parseInt(e.target.value) })} /></FormField>
+                <FormField label="Unità"><input style={inputStyle} value={itemForm.unit} onChange={e => setItemForm({ ...itemForm, unit: e.target.value })} /></FormField>
+              </div>
             </div>
-            {input('unit', 'Unità di misura')}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-              <button onClick={() => setShowItemModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
-              <button onClick={saveItem} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            <div style={styles.modalFooter}>
+              <Btn label="Annulla" onClick={() => setShowItemModal(false)} color={C.textSub} outline />
+              <Btn label="💾 Salva" onClick={saveItem} />
             </div>
           </div>
         </div>
       )}
-
 
       {/* MODAL CATEGORIA */}
       {showCatModal && (
-        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ marginBottom: 20 }}>{editingCat ? '✏️ Modifica Categoria' : '✚ Nuova Categoria'}</h3>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Nome *</label>
-              <input value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modal, width: 400 }}>
+            <div style={styles.modalHeader}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>{editingCat ? '✏️ Modifica Categoria' : '✚ Nuova Categoria'}</span>
+              <button onClick={() => setShowCatModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: C.textSub }}>✕</button>
             </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Descrizione</label>
-              <input value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+            <div style={styles.modalBody}>
+              <FormField label="Nome *"><input style={inputStyle} value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} /></FormField>
+              <FormField label="Descrizione"><input style={inputStyle} value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} /></FormField>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowCatModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
-              <button onClick={saveCat} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            <div style={styles.modalFooter}>
+              <Btn label="Annulla" onClick={() => setShowCatModal(false)} color={C.textSub} outline />
+              <Btn label="💾 Salva" onClick={saveCat} />
             </div>
           </div>
         </div>
       )}
 
-
       {/* MODAL UTENTE */}
       {showUserModal && (
-        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ marginBottom: 20 }}>{editingUser ? '✏️ Modifica Utente' : '✚ Nuovo Utente'}</h3>
-            {['username', 'email', 'password'].map(field => (
-              <div key={field} style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>
-                  {field === 'username' ? 'Username *' : field === 'email' ? 'Email *' : editingUser ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password *'}
-                </label>
-                <input
-                  type={field === 'password' ? 'password' : 'text'}
-                  value={userForm[field]}
-                  onChange={e => setUserForm({ ...userForm, [field]: e.target.value })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }}
-                />
-              </div>
-            ))}
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Ruolo *</label>
-              <select value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
-                <option value="viewer">Viewer</option>
-                <option value="magazziniere">Magazziniere</option>
-                <option value="admin">Admin</option>
-              </select>
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modal, width: 400 }}>
+            <div style={styles.modalHeader}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>{editingUser ? '✏️ Modifica Utente' : '✚ Nuovo Utente'}</span>
+              <button onClick={() => setShowUserModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: C.textSub }}>✕</button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowUserModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
-              <button onClick={saveUser} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            <div style={styles.modalBody}>
+              <FormField label="Username *"><input style={inputStyle} value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} /></FormField>
+              <FormField label="Email *"><input style={inputStyle} value={userForm.email} onChange={e => setUserForm({ ...userForm, email: e.target.value })} /></FormField>
+              <FormField label={editingUser ? 'Nuova password (lascia vuoto per non cambiarla)' : 'Password *'}>
+                <input style={inputStyle} type="password" value={userForm.password} onChange={e => setUserForm({ ...userForm, password: e.target.value })} />
+              </FormField>
+              <FormField label="Ruolo *">
+                <select style={inputStyle} value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
+                  <option value="viewer">Viewer</option>
+                  <option value="magazziniere">Magazziniere</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </FormField>
+            </div>
+            <div style={styles.modalFooter}>
+              <Btn label="Annulla" onClick={() => setShowUserModal(false)} color={C.textSub} outline />
+              <Btn label="💾 Salva" onClick={saveUser} />
             </div>
           </div>
         </div>
@@ -482,39 +504,34 @@ export default function Dashboard() {
 
       {/* MODAL MOVIMENTO */}
       {showMovModal && (
-        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ marginBottom: 20 }}>🔄 Registra Movimento</h3>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Articolo *</label>
-              <select value={movForm.item_id} onChange={e => setMovForm({ ...movForm, item_id: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
-                {items.map(i => <option key={i.id} value={i.id}>{i.name} (disponibili: {i.quantity} {i.unit})</option>)}
-              </select>
+        <div style={styles.modalOverlay}>
+          <div style={{ ...styles.modal, width: 420 }}>
+            <div style={styles.modalHeader}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>🔄 Registra Movimento</span>
+              <button onClick={() => setShowMovModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: C.textSub }}>✕</button>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Tipo *</label>
-              <select value={movForm.type} onChange={e => setMovForm({ ...movForm, type: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
-                <option value="IN">⬆️ Entrata</option>
-                <option value="OUT">⬇️ Uscita</option>
-              </select>
+            <div style={styles.modalBody}>
+              <FormField label="Articolo *">
+                <select style={inputStyle} value={movForm.item_id} onChange={e => setMovForm({ ...movForm, item_id: parseInt(e.target.value) })}>
+                  {items.map(i => <option key={i.id} value={i.id}>{i.name} (disponibili: {i.quantity} {i.unit})</option>)}
+                </select>
+              </FormField>
+              <FormField label="Tipo *">
+                <select style={inputStyle} value={movForm.type} onChange={e => setMovForm({ ...movForm, type: e.target.value })}>
+                  <option value="IN">⬆️ Entrata</option>
+                  <option value="OUT">⬇️ Uscita</option>
+                </select>
+              </FormField>
+              <FormField label="Quantità *">
+                <input style={inputStyle} type="number" min="1" value={movForm.quantity} onChange={e => setMovForm({ ...movForm, quantity: parseInt(e.target.value) })} />
+              </FormField>
+              <FormField label="Note">
+                <input style={inputStyle} type="text" placeholder="es. Aula 3B, ordine fornitore..." value={movForm.note} onChange={e => setMovForm({ ...movForm, note: e.target.value })} />
+              </FormField>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Quantità *</label>
-              <input type="number" min="1" value={movForm.quantity}
-                onChange={e => setMovForm({ ...movForm, quantity: parseInt(e.target.value) })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Note</label>
-              <input type="text" value={movForm.note} placeholder="es. Aula 3B, ordine fornitore..."
-                onChange={e => setMovForm({ ...movForm, note: e.target.value })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={() => setShowMovModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
-              <button onClick={saveMov} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Registra</button>
+            <div style={styles.modalFooter}>
+              <Btn label="Annulla" onClick={() => setShowMovModal(false)} color={C.textSub} outline />
+              <Btn label="💾 Registra" onClick={saveMov} />
             </div>
           </div>
         </div>
