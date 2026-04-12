@@ -30,9 +30,15 @@ export default function Dashboard() {
   const [editingUser, setEditingUser] = useState(null)
   const [userForm, setUserForm] = useState({ username: '', email: '', password: '', role: 'viewer' })
 
+  // Stati per i movimenti
+  const [movements, setMovements] = useState([])
+  const [showMovModal, setShowMovModal] = useState(false)
+  const [movForm, setMovForm] = useState({ item_id: '', type: 'IN', quantity: 1, note: '' })
+
   const fetchAll = () => {
     api.get('/api/items').then(r => setItems(r.data))
     api.get('/api/categories').then(r => setCategories(r.data))
+    api.get('/api/movements').then(r => setMovements(r.data))
     if (user?.role === 'admin') api.get('/api/users').then(r => setUsers(r.data))
   }
 
@@ -135,6 +141,18 @@ export default function Dashboard() {
     fetchAll()
   }
 
+  // ── MOVIMENTI ──
+  const openNewMov = () => {
+    setMovForm({ item_id: items[0]?.id || '', type: 'IN', quantity: 1, note: '' })
+    setShowMovModal(true)
+  }
+
+  const saveMov = async () => {
+    await api.post('/api/movements', movForm)
+    setShowMovModal(false)
+    fetchAll()
+  }
+
 
 
   const btn = (label, onClick, color = '#1677ff') => (
@@ -167,6 +185,7 @@ export default function Dashboard() {
           {[
             { key: 'dashboard', icon: '📊', label: 'Dashboard' },
             { key: 'items', icon: '📦', label: 'Scorte' },
+            { key: 'movements', icon: '🔄', label: 'Movimenti' },
             { key: 'categories', icon: '🏷️', label: 'Categorie' },
             ...(user?.role === 'admin' ? [{ key: 'users', icon: '👥', label: 'Utenti' }] : []),
           ].map(item => (
@@ -254,6 +273,56 @@ export default function Dashboard() {
                       </tr>
                     )
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* MOVIMENTI */}
+        {page === 'movements' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2>🔄 Movimenti</h2>
+              {user?.role !== 'viewer' && btn('+ Registra Movimento', openNewMov)}
+            </div>
+            <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#fafafa' }}>
+                    {['Articolo', 'Tipo', 'Quantità', 'Utente', 'Note', 'Data'].map(h => (
+                      <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, color: '#8c8c8c', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f0f0f0' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 24, textAlign: 'center', color: '#8c8c8c' }}>Nessun movimento registrato</td>
+                    </tr>
+                  )}
+                  {movements.map(m => (
+                    <tr key={m.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ padding: '14px 16px', fontWeight: 500 }}>{m.item}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <span style={{
+                          background: m.type === 'IN' ? '#f6ffed' : '#fff2f0',
+                          color: m.type === 'IN' ? '#389e0d' : '#cf1322',
+                          padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500
+                        }}>
+                          {m.type === 'IN' ? '⬆️ Entrata' : '⬇️ Uscita'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 16px', fontWeight: 600, color: m.quantity_delta > 0 ? '#389e0d' : '#cf1322' }}>
+                        {m.quantity_delta > 0 ? '+' : ''}{m.quantity_delta}
+                      </td>
+                      <td style={{ padding: '14px 16px', color: '#8c8c8c' }}>{m.user}</td>
+                      <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>{m.note || '—'}</td>
+                      <td style={{ padding: '14px 16px', color: '#8c8c8c', fontSize: 13 }}>
+                        {new Date(m.timestamp).toLocaleDateString('it-IT')} {new Date(m.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -406,6 +475,46 @@ export default function Dashboard() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <button onClick={() => setShowUserModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
               <button onClick={saveUser} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Salva</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MOVIMENTO */}
+      {showMovModal && (
+        <div style={{ position: 'fixed', inset: 0, background: '#00000060', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 420, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginBottom: 20 }}>🔄 Registra Movimento</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Articolo *</label>
+              <select value={movForm.item_id} onChange={e => setMovForm({ ...movForm, item_id: parseInt(e.target.value) })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
+                {items.map(i => <option key={i.id} value={i.id}>{i.name} (disponibili: {i.quantity} {i.unit})</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Tipo *</label>
+              <select value={movForm.type} onChange={e => setMovForm({ ...movForm, type: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13 }}>
+                <option value="IN">⬆️ Entrata</option>
+                <option value="OUT">⬇️ Uscita</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Quantità *</label>
+              <input type="number" min="1" value={movForm.quantity}
+                onChange={e => setMovForm({ ...movForm, quantity: parseInt(e.target.value) })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Note</label>
+              <input type="text" value={movForm.note} placeholder="es. Aula 3B, ordine fornitore..."
+                onChange={e => setMovForm({ ...movForm, note: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #d9d9d9', fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button onClick={() => setShowMovModal(false)} style={{ padding: '8px 16px', borderRadius: 6, border: '1px solid #d9d9d9', background: '#fff', cursor: 'pointer', fontSize: 13 }}>Annulla</button>
+              <button onClick={saveMov} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#1677ff', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>💾 Registra</button>
             </div>
           </div>
         </div>
