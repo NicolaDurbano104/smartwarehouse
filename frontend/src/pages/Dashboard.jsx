@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts'
 
 const token = localStorage.getItem('token')
 const user = JSON.parse(localStorage.getItem('user'))
@@ -166,6 +167,17 @@ export default function Dashboard() {
   const roleColor = (role) => role === 'admin' ? { bg: '#EFF6FF', color: '#1D4ED8' } : role === 'magazziniere' ? { bg: '#F0FDF4', color: '#16A34A' } : { bg: '#F9FAFB', color: '#6B7280' }
   const statusInfo = (item) => item.quantity === 0 ? { label: 'Esaurito', color: C.danger, bg: '#FEF2F2' } : item.quantity < item.min_threshold ? { label: 'Sotto soglia', color: C.warning, bg: '#FFFBEB' } : { label: 'Disponibile', color: C.success, bg: '#F0FDF4' }
 
+  const chartMovements = () => {
+    const grouped = {}
+    movements.forEach(m => {
+      const date = new Date(m.timestamp).toLocaleDateString('it-IT')
+      if (!grouped[date]) grouped[date] = { date, entrate: 0, uscite: 0 }
+      if (m.quantity_delta > 0) grouped[date].entrate += m.quantity_delta
+      else grouped[date].uscite += Math.abs(m.quantity_delta)
+    })
+    return Object.values(grouped).reverse()
+  }
+
   return (
     <div style={styles.app}>
 
@@ -181,10 +193,13 @@ export default function Dashboard() {
           <NavItem icon="📦" label="Scorte" active={page === 'items'} onClick={() => setPage('items')} />
           <NavItem icon="🔄" label="Movimenti" active={page === 'movements'} onClick={() => setPage('movements')} />
           <NavItem icon="🏷️" label="Categorie" active={page === 'categories'} onClick={() => setPage('categories')} />
-          {user?.role === 'admin' && <>
-            <div style={styles.navSection}>Amministrazione</div>
-            <NavItem icon="👥" label="Utenti" active={page === 'users'} onClick={() => setPage('users')} />
-          </>}
+          <NavItem icon="📈" label="Grafici" active={page === 'charts'} onClick={() => setPage('charts')} />
+          {user?.role === 'admin' && (
+            <>
+              <div style={styles.navSection}>Amministrazione</div>
+              <NavItem icon="👥" label="Utenti" active={page === 'users'} onClick={() => setPage('users')} />
+            </>
+          )}
         </nav>
         <div style={{ padding: '16px 16px 20px', borderTop: `1px solid ${C.sidebarBorder}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -209,7 +224,7 @@ export default function Dashboard() {
             <span style={{ color: C.textSub }}>SmartWarehouse</span>
             <span style={{ margin: '0 6px' }}>›</span>
             <span style={{ color: C.text, fontWeight: 500 }}>
-              {{ dashboard: 'Dashboard', items: 'Scorte', movements: 'Movimenti', categories: 'Categorie', users: 'Utenti' }[page]}
+              {{ dashboard: 'Dashboard', items: 'Scorte', movements: 'Movimenti', categories: 'Categorie', charts: 'Grafici', users: 'Utenti' }[page]}
             </span>
           </div>
           <div style={{ fontSize: 13, color: C.textSub }}>
@@ -228,20 +243,17 @@ export default function Dashboard() {
                   <div style={styles.pageSub}>Ecco un riepilogo del magazzino</div>
                 </div>
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
                 <StatCard icon="📦" label="Articoli totali" value={items.length} color={C.primary} />
                 <StatCard icon="🏷️" label="Categorie" value={categories.length} color={C.success} />
                 <StatCard icon="⚠️" label="Sotto soglia" value={sottoSoglia.length} color={C.warning} sub={sottoSoglia.length > 0 ? { text: 'Richiedono attenzione', color: C.warning } : null} />
                 <StatCard icon="🚫" label="Esauriti" value={critici.length} color={C.danger} sub={critici.length > 0 ? { text: 'Ordine necessario', color: C.danger } : null} />
               </div>
-
               {(critici.length > 0 || sottoSoglia.length > 0) && (
                 <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '14px 18px', color: C.danger, marginBottom: 24, fontSize: 13.5 }}>
                   ⚠️ <strong>{critici.length + sottoSoglia.length} articoli</strong> richiedono attenzione — controlla le scorte.
                 </div>
               )}
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div style={styles.card}>
                   <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, fontWeight: 600, fontSize: 14 }}>📦 Ultimi articoli aggiunti</div>
@@ -290,7 +302,7 @@ export default function Dashboard() {
                     {items.map(item => {
                       const s = statusInfo(item)
                       return (
-                        <tr key={item.id} style={{ transition: 'background 0.1s' }}>
+                        <tr key={item.id}>
                           <td style={{ ...styles.td, fontWeight: 600 }}>{item.name}</td>
                           <td style={styles.td}><Badge text={item.category} color={C.primary} bg="#EFF6FF" /></td>
                           <td style={{ ...styles.td, fontWeight: 700, fontSize: 15 }}>{item.quantity}</td>
@@ -357,7 +369,7 @@ export default function Dashboard() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
                 {categories.map(cat => (
-                  <div key={cat.id} style={{ ...styles.card, padding: 22, transition: 'box-shadow 0.2s' }}>
+                  <div key={cat.id} style={{ ...styles.card, padding: 22 }}>
                     <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{cat.name}</div>
                     <div style={{ color: C.textSub, fontSize: 13, marginBottom: 14 }}>{cat.description || 'Nessuna descrizione'}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -371,6 +383,54 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* GRAFICI */}
+          {page === 'charts' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>Grafici</div>
+                  <div style={styles.pageSub}>Analisi consumi e movimenti</div>
+                </div>
+              </div>
+
+              <div style={{ ...styles.card, padding: 24, marginBottom: 20 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20 }}>📈 Movimenti nel tempo</div>
+                {movements.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: C.textSub, padding: 40 }}>
+                    Nessun movimento registrato — registra qualche movimento per vedere il grafico
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={chartMovements()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12, fill: C.textSub }} />
+                      <YAxis tick={{ fontSize: 12, fill: C.textSub }} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
+                      <Legend />
+                      <Line type="monotone" dataKey="entrate" stroke={C.success} strokeWidth={2} dot={{ r: 4 }} name="Entrate" />
+                      <Line type="monotone" dataKey="uscite" stroke={C.danger} strokeWidth={2} dot={{ r: 4 }} name="Uscite" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              <div style={{ ...styles.card, padding: 24 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 20 }}>📊 Quantità attuale per articolo</div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={items.map(i => ({ name: i.name, quantità: i.quantity, soglia: i.min_threshold }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: C.textSub }} />
+                    <YAxis tick={{ fontSize: 12, fill: C.textSub }} />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13 }} />
+                    <Legend />
+                    <Bar dataKey="quantità" fill={C.primary} radius={[4, 4, 0, 0]} name="Quantità" />
+                    <Bar dataKey="soglia" fill={C.warning} radius={[4, 4, 0, 0]} name="Soglia minima" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
@@ -419,6 +479,7 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
         </div>
       </main>
 
@@ -536,6 +597,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
     </div>
   )
 }
