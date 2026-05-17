@@ -116,9 +116,9 @@ function AIPredictions() {
   const [loading, setLoading] = useState(true)
 
   const token = localStorage.getItem('token')
-  const api = axios.create({
-    baseURL: 'https://smartwarehouse-tt7a.onrender.com',
-    headers: { Authorization: `Bearer ${token}` }
+  const aiApi = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   })
 
   useEffect(() => {
