@@ -18,12 +18,14 @@ def create_app():
     from routes.categories import categories_bp
     from routes.users import users_bp
     from routes.movements import movements_bp
+    from routes.ai import ai_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(items_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(movements_bp)
+    app.register_blueprint(ai_bp)
 
     # Crea le tabelle del database se non esistono
     with app.app_context():

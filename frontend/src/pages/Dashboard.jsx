@@ -111,6 +111,75 @@ function FormField({ label, children }) {
 
 const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: `1.5px solid ${C.border}`, fontSize: 13.5, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', color: C.text }
 
+function AIPredictions() {
+  const [predictions, setPredictions] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const token = localStorage.getItem('token')
+  const api = axios.create({
+    baseURL: 'http://localhost:5000',
+    headers: { Authorization: `Bearer ${token}` }
+  })
+
+  useEffect(() => {
+    api.get('/api/ai/predictions')
+      .then(r => { setPredictions(r.data); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>Caricamento previsioni...</div>
+
+  const statusInfo = (s) => {
+    if (s === 'empty') return { label: 'Esaurito', color: '#DC2626', bg: '#FEF2F2', icon: '🚫' }
+    if (s === 'critical') return { label: 'Critico — meno di 7 giorni', color: '#DC2626', bg: '#FEF2F2', icon: '🔴' }
+    if (s === 'warning') return { label: 'Attenzione — meno di 30 giorni', color: '#D97706', bg: '#FFFBEB', icon: '🟡' }
+    if (s === 'ok') return { label: 'OK', color: '#16A34A', bg: '#F0FDF4', icon: '🟢' }
+    if (s === 'insufficient_data') return { label: 'Dati insufficienti', color: '#6B7280', bg: '#F9FAFB', icon: '⚪' }
+    if (s === 'no_consumption') return { label: 'Nessun consumo', color: '#6B7280', bg: '#F9FAFB', icon: '⚪' }
+    return { label: s, color: '#6B7280', bg: '#F9FAFB', icon: '⚪' }
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+      {predictions.map(p => {
+        const s = statusInfo(p.status)
+        return (
+          <div key={p.id} style={{
+            background: '#fff', borderRadius: 10, padding: 22,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: `1px solid #E5E7EB`
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{p.name}</div>
+              <span style={{ fontSize: 18 }}>{s.icon}</span>
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>
+                {s.label}
+              </span>
+            </div>
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <span style={{ color: '#6B7280' }}>Quantità attuale</span>
+                <span style={{ fontWeight: 600 }}>{p.quantity} {p.unit}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <span style={{ color: '#6B7280' }}>Consumo medio/giorno</span>
+                <span style={{ fontWeight: 600 }}>{p.avg_daily_consumption ?? '—'} {p.unit}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                <span style={{ color: '#6B7280' }}>Giorni all'esaurimento</span>
+                <span style={{ fontWeight: 600, color: s.color }}>
+                  {p.days_until_empty !== null ? `${p.days_until_empty} giorni` : '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
@@ -194,6 +263,7 @@ export default function Dashboard() {
           <NavItem icon="🔄" label="Movimenti" active={page === 'movements'} onClick={() => setPage('movements')} />
           <NavItem icon="🏷️" label="Categorie" active={page === 'categories'} onClick={() => setPage('categories')} />
           <NavItem icon="📈" label="Grafici" active={page === 'charts'} onClick={() => setPage('charts')} />
+          <NavItem icon="🤖" label="Previsioni AI" active={page === 'ai'} onClick={() => setPage('ai')} />
           {user?.role === 'admin' && (
             <>
               <div style={styles.navSection}>Amministrazione</div>
@@ -224,7 +294,7 @@ export default function Dashboard() {
             <span style={{ color: C.textSub }}>SmartWarehouse</span>
             <span style={{ margin: '0 6px' }}>›</span>
             <span style={{ color: C.text, fontWeight: 500 }}>
-              {{ dashboard: 'Dashboard', items: 'Scorte', movements: 'Movimenti', categories: 'Categorie', charts: 'Grafici', users: 'Utenti' }[page]}
+              {{ dashboard: 'Dashboard', items: 'Scorte', movements: 'Movimenti', categories: 'Categorie', charts: 'Grafici', ai: 'Previsioni AI', users: 'Utenti' }[page]}
             </span>
           </div>
           <div style={{ fontSize: 13, color: C.textSub }}>
@@ -432,6 +502,20 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          )}
+
+          {/* PREVISIONI AI */}
+          {page === 'ai' && (
+            <div>
+              <div style={styles.pageHeader}>
+                <div>
+                  <div style={styles.pageTitle}>🤖 Previsioni AI</div>
+                  <div style={styles.pageSub}>Previsione esaurimento scorte basata sui movimenti storici</div>
+                </div>
+              </div>
+
+              <AIPredictions />
             </div>
           )}
 
