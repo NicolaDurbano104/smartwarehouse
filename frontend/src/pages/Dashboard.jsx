@@ -6,7 +6,7 @@ const token = localStorage.getItem('token')
 const user = JSON.parse(localStorage.getItem('user'))
 
 const api = axios.create({
-  baseURL: 'https://smartwarehouse-tt7a.onrender.com',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   headers: { Authorization: `Bearer ${token}` }
 })
 
@@ -117,7 +117,7 @@ function AIPredictions() {
 
   const token = localStorage.getItem('token')
   const aiApi = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   })
 
