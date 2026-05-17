@@ -6,7 +6,7 @@ const token = localStorage.getItem('token')
 const user = JSON.parse(localStorage.getItem('user'))
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: 'https://smartwarehouse-y04k.onrender.com',
   headers: { Authorization: `Bearer ${token}` }
 })
 
